@@ -33,7 +33,7 @@
         color: #00695c;
       }
 
-      .players-list, .instructions, .note {
+      .players-list, .note {
         max-width: 600px;
         margin: 20px auto;
         background: #ffffff;
@@ -121,12 +121,6 @@
         border-bottom: 1px solid #00796b;
       }
 
-      .instructions {
-        background: #fff8e1;
-        border-left: 6px solid #fbc02d;
-        font-style: italic;
-      }
-
       .note {
         text-align: center;
         font-style: italic;
@@ -150,10 +144,6 @@
       <button onclick="addOrEditPlayer()">S'inscrire</button>
       <button id="removeButton" style="display:none" onclick="removeSelf()">Retirer mon nom</button>
     </div>
-
-   <div class="instructions">
-  Chaque joueur peut rejoindre UNE SEULE équipe à la fois. Il doit y avoir un minimum de <strong>2 filles par équipe</strong>, et de <strong>2 joueurs intermédiaire-débutant</strong> par équipe. Je me réserve le droit de modifier les équipes afin de les équilibrer.
-</div>
 
     <div class="teams">
       <div class="team" id="teamA">
