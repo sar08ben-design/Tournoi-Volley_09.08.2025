@@ -1,282 +1,153 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Inscription Tournoi Volley</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Équipes Volley</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f8ff;
+      padding: 20px;
+    }
 
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(to right, #e0f7fa, #ffffff);
-        margin: 0;
-        padding: 30px 15px;
-        color: #333;
-      }
+    h1 {
+      text-align: center;
+      color: #00796b;
+    }
 
-      h1 {
-        text-align: center;
-        font-size: 2.5em;
-        margin-bottom: 0.2em;
-        color: #00796b;
-      }
+    .teams {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
 
-      .counter {
-        text-align: center;
-        font-size: 1.2em;
-        margin-bottom: 20px;
-        color: #00695c;
-      }
+    .team {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
 
-      .players-list, .instructions, .note {
-        max-width: 600px;
-        margin: 20px auto;
-        background: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
+    .team h3 {
+      margin-top: 0;
+      color: #00796b;
+    }
 
-      ol {
-        padding-left: 20px;
-        margin: 0 0 10px 0;
-      }
+    .admin-controls {
+      display: none;
+      margin-top: 10px;
+    }
 
-      input[type="text"] {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 1em;
-      }
+    .admin-controls input {
+      margin-bottom: 5px;
+      width: 100%;
+      padding: 5px;
+    }
 
-      button {
-        margin-top: 10px;
-        padding: 10px;
-        width: 100%;
-        background-color: #26a69a;
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 8px;
-        font-size: 1em;
-        transition: background 0.3s;
-      }
+    .admin-controls button {
+      width: 100%;
+      padding: 8px;
+      background: #00796b;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-      button:hover {
-        background-color: #2bbbad;
-      }
+    .admin-controls button:hover {
+      background: #004d40;
+    }
+  </style>
+</head>
+<body>
+  <h1>Équipes du Tournoi</h1>
 
-      #removeButton {
-        background-color: #ef5350;
-      }
+  <div class="teams" id="teamsContainer">
+    <!-- Teams injected by JS -->
+  </div>
 
-      #removeButton:hover {
-        background-color: #d32f2f;
-      }
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqdd88clB7eZV9qYMWmOjM961HEFZcB2k",
+      authDomain: "volley-tournoi.firebaseapp.com",
+      projectId: "volley-tournoi",
+    };
 
-      .teams {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        max-width: 1100px;
-        margin: 40px auto;
-      }
+    const adminUID = "TON_UID_ICI"; // ← METS TON UID ICI
 
-      .team {
-        background: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
-      .team h3 {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 1.2em;
-        margin-bottom: 10px;
-      }
+    const teamIDs = ["teamA", "teamB", "teamC", "teamD"];
 
-      .team input.team-name {
-        font-weight: bold;
-        font-size: 1em;
-        border: none;
-        background: transparent;
-        color: #00796b;
-        border-bottom: 1px dashed #bbb;
-      }
+    function createTeamCard(teamId, teamData, isAdmin) {
+      const div = document.createElement("div");
+      div.className = "team";
 
-      .team input.team-name:focus {
-        outline: none;
-        border-bottom: 1px solid #00796b;
-      }
+      const title = document.createElement("h3");
+      title.textContent = teamData.name || teamId;
+      div.appendChild(title);
 
-      .instructions {
-        background: #fff8e1;
-        border-left: 6px solid #fbc02d;
-        font-style: italic;
-      }
+      const list = document.createElement("ol");
+      (teamData.players || []).forEach(player => {
+        const li = document.createElement("li");
+        li.textContent = player;
+        list.appendChild(li);
+      });
+      div.appendChild(list);
 
-      .note {
-        text-align: center;
-        font-style: italic;
-        color: #555;
-      }
+      if (isAdmin) {
+        const adminDiv = document.createElement("div");
+        adminDiv.className = "admin-controls";
 
-      .player-item {
-        margin-bottom: 4px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Inscris-toi!</h1>
-    <div class="counter">
-      <strong>Joueurs inscrits :</strong> <span id="count">0</span>/28
-    </div>
+        const input = document.createElement("input");
+        input.placeholder = "Ajouter un joueur";
+        adminDiv.appendChild(input);
 
-    <div class="players-list">
-      <ol id="playerList"></ol>
-      <input type="text" id="nameInput" placeholder="Ton nom" />
-      <button onclick="addOrEditPlayer()">S'inscrire</button>
-      <button id="removeButton" style="display:none" onclick="removeSelf()">Retirer mon nom</button>
-    </div>
-
-   <div class="instructions">
-  Chaque joueur peut rejoindre UNE SEULE équipe à la fois. Il doit y avoir un minimum de <strong>2 filles par équipe</strong>, et de <strong>2 joueurs intermédiaire-débutant</strong> par équipe. Je me réserve le droit de modifier les équipes afin de les équilibrer.
-</div>
-
-    <div class="teams">
-      <div class="team" id="teamA">
-        <h3><input type="text" class="team-name" value="Équipe A" onchange="saveTeamName('teamA', this.value)" /></h3>
-        <ol class="player-list" id="teamAList"></ol>
-        <input type="text" placeholder="Ton nom" class="player-input" />
-        <button class="join-btn">Rejoindre cette équipe</button>
-      </div>
-      <div class="team" id="teamB">
-        <h3><input type="text" class="team-name" value="Équipe B" onchange="saveTeamName('teamB', this.value)" /></h3>
-        <ol class="player-list" id="teamBList"></ol>
-        <input type="text" placeholder="Ton nom" class="player-input" />
-        <button class="join-btn">Rejoindre cette équipe</button>
-      </div>
-      <div class="team" id="teamC">
-        <h3><input type="text" class="team-name" value="Équipe C" onchange="saveTeamName('teamC', this.value)" /></h3>
-        <ol class="player-list" id="teamCList"></ol>
-        <input type="text" placeholder="Ton nom" class="player-input" />
-        <button class="join-btn">Rejoindre cette équipe</button>
-      </div>
-      <div class="team" id="teamD">
-        <h3><input type="text" class="team-name" value="Équipe D" onchange="saveTeamName('teamD', this.value)" /></h3>
-        <ol class="player-list" id="teamDList"></ol>
-        <input type="text" placeholder="Ton nom" class="player-input" />
-        <button class="join-btn">Rejoindre cette équipe</button>
-      </div>
-    </div>
-
-    <div class="note">
-      Nous aurons 4 équipes. Minimum de 6 joueurs par équipe (sans compter les libéros) 
-    </div>
-
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyDqdd88clB7eZV9qYMWmOjM961HEFZcB2k",
-        authDomain: "volley-tournoi.firebaseapp.com",
-        projectId: "volley-tournoi",
-        storageBucket: "volley-tournoi.firebasestorage.app",
-        messagingSenderId: "725989442836",
-        appId: "1:725989442836:web:5d59fbc16608be0fa52e01"
-      };
-
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const maxPlayers = 28;
-      const playerList = document.getElementById("playerList");
-      const nameInput = document.getElementById("nameInput");
-      const countSpan = document.getElementById("count");
-      const removeButton = document.getElementById("removeButton");
-
-      function updateCounterColor(count) {
-        if (count < 12) countSpan.style.color = "#d32f2f";
-        else if (count < 24) countSpan.style.color = "#f57c00";
-        else countSpan.style.color = "#388e3c";
-      }
-
-      async function loadPlayers() {
-        const playersSnapshot = await db.collection("players").get();
-        const players = playersSnapshot.docs.map(doc => doc.data().name);
-        playerList.innerHTML = "";
-        const currentName = localStorage.getItem("currentPlayer") || null;
-        removeButton.style.display = currentName ? "block" : "none";
-        players.forEach(player => {
-          const li = document.createElement("li");
-          li.className = "player-item";
-          li.textContent = player;
-          playerList.appendChild(li);
-        });
-        countSpan.textContent = players.length;
-        updateCounterColor(players.length);
-      }
-
-      async function addOrEditPlayer() {
-        const name = nameInput.value.trim();
-        if (!name) return;
-        const currentName = localStorage.getItem("currentPlayer") || null;
-        const playersSnapshot = await db.collection("players").get();
-        const players = playersSnapshot.docs.map(doc => doc.data().name);
-
-        if (currentName) {
-          if (name !== currentName && players.includes(name)) {
-            alert("Ce nom est déjà utilisé.");
-            return;
+        const btn = document.createElement("button");
+        btn.textContent = "Ajouter";
+        btn.onclick = async () => {
+          const playerName = input.value.trim();
+          if (playerName) {
+            const updatedPlayers = [...(teamData.players || []), playerName];
+            await db.collection("teams").doc(teamId).set({ players: updatedPlayers }, { merge: true });
+            location.reload();
           }
-          const playerDoc = playersSnapshot.docs.find(doc => doc.data().name === currentName);
-          if (playerDoc) {
-            await db.collection("players").doc(playerDoc.id).update({ name });
-            localStorage.setItem("currentPlayer", name);
-          }
-        } else {
-          if (players.includes(name)) {
-            alert("Ce nom est déjà utilisé.");
-            return;
-          }
-          if (players.length >= maxPlayers) {
-            alert("La liste est complète !");
-            return;
-          }
-          await db.collection("players").add({ name });
-          localStorage.setItem("currentPlayer", name);
-        }
-
-        nameInput.value = "";
-        loadPlayers();
+        };
+        adminDiv.appendChild(btn);
+        adminDiv.style.display = "block";
+        div.appendChild(adminDiv);
       }
 
-      async function removeSelf() {
-        const currentName = localStorage.getItem("currentPlayer") || null;
-        if (!currentName) return;
-        const playersSnapshot = await db.collection("players").get();
-        const playerDoc = playersSnapshot.docs.find(doc => doc.data().name === currentName);
-        if (playerDoc) {
-          await db.collection("players").doc(playerDoc.id).delete();
-          localStorage.removeItem("currentPlayer");
-        }
-        loadPlayers();
-      }
+      return div;
+    }
 
-      async function saveTeamName(teamId, newName) {
-        await db.collection("teams").doc(teamId).set({ name: newName }, { merge: true });
-      }
+    async function renderTeams(isAdmin) {
+      const container = document.getElementById("teamsContainer");
+      container.innerHTML = "";
 
-      window.onload = loadPlayers;
-    </script>
-  </body>
+      const snapshot = await db.collection("teams").get();
+      snapshot.forEach(doc => {
+        const teamCard = createTeamCard(doc.id, doc.data(), isAdmin);
+        container.appendChild(teamCard);
+      });
+    }
+
+    // Connexion utilisateur
+    auth.onAuthStateChanged(async user => {
+      const isAdmin = user?.uid === adminUID;
+      renderTeams(isAdmin);
+    });
+
+    // Auto-signin anonyme (requis pour auth)
+    auth.signInAnonymously().catch(console.error);
+  </script>
+</body>
 </html>
