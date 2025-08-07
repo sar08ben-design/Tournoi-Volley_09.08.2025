@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Équipes Volley</title>
+  <title>Tournoi Volley</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       background: #f0f8ff;
       padding: 20px;
     }
@@ -39,38 +39,29 @@
       color: #00796b;
     }
 
-    .admin-controls {
-      display: none;
+    .admin {
       margin-top: 10px;
     }
 
-    .admin-controls input {
-      margin-bottom: 5px;
+    .admin input {
       width: 100%;
-      padding: 5px;
+      padding: 8px;
+      margin-bottom: 5px;
     }
 
-    .admin-controls button {
+    .admin button {
       width: 100%;
       padding: 8px;
       background: #00796b;
       color: white;
       border: none;
-      border-radius: 5px;
       cursor: pointer;
-    }
-
-    .admin-controls button:hover {
-      background: #004d40;
     }
   </style>
 </head>
 <body>
-  <h1>Équipes du Tournoi</h1>
-
-  <div class="teams" id="teamsContainer">
-    <!-- Teams injected by JS -->
-  </div>
+  <h1>Équipes du tournoi</h1>
+  <div class="teams" id="teamsContainer"></div>
 
   <script>
     const firebaseConfig = {
@@ -85,68 +76,65 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    const teamIDs = ["teamA", "teamB", "teamC", "teamD"];
+    const teamIds = ["teamA", "teamB", "teamC", "teamD"];
 
-    function createTeamCard(teamId, teamData, isAdmin) {
-      const div = document.createElement("div");
-      div.className = "team";
+    function createTeamCard(teamId, data, isAdmin) {
+      const card = document.createElement("div");
+      card.className = "team";
 
       const title = document.createElement("h3");
-      title.textContent = teamData.name || teamId;
-      div.appendChild(title);
+      title.textContent = data.name || teamId;
+      card.appendChild(title);
 
       const list = document.createElement("ol");
-      (teamData.players || []).forEach(player => {
+      (data.players || []).forEach(p => {
         const li = document.createElement("li");
-        li.textContent = player;
+        li.textContent = p;
         list.appendChild(li);
       });
-      div.appendChild(list);
+      card.appendChild(list);
 
       if (isAdmin) {
         const adminDiv = document.createElement("div");
-        adminDiv.className = "admin-controls";
+        adminDiv.className = "admin";
 
         const input = document.createElement("input");
-        input.placeholder = "Ajouter un joueur";
+        input.placeholder = "Ajouter un joueur...";
         adminDiv.appendChild(input);
 
         const btn = document.createElement("button");
         btn.textContent = "Ajouter";
         btn.onclick = async () => {
-          const playerName = input.value.trim();
-          if (playerName) {
-            const updatedPlayers = [...(teamData.players || []), playerName];
-            await db.collection("teams").doc(teamId).set({ players: updatedPlayers }, { merge: true });
+          const name = input.value.trim();
+          if (name) {
+            const newPlayers = [...(data.players || []), name];
+            await db.collection("teams").doc(teamId).set({ players: newPlayers }, { merge: true });
             location.reload();
           }
         };
         adminDiv.appendChild(btn);
-        adminDiv.style.display = "block";
-        div.appendChild(adminDiv);
+        card.appendChild(adminDiv);
       }
 
-      return div;
+      return card;
     }
 
     async function renderTeams(isAdmin) {
       const container = document.getElementById("teamsContainer");
       container.innerHTML = "";
+      const snap = await db.collection("teams").get();
 
-      const snapshot = await db.collection("teams").get();
-      snapshot.forEach(doc => {
-        const teamCard = createTeamCard(doc.id, doc.data(), isAdmin);
-        container.appendChild(teamCard);
+      snap.forEach(doc => {
+        const card = createTeamCard(doc.id, doc.data(), isAdmin);
+        container.appendChild(card);
       });
     }
 
-    // Connexion utilisateur
-    auth.onAuthStateChanged(async user => {
+    auth.onAuthStateChanged(user => {
       const isAdmin = user?.uid === adminUID;
       renderTeams(isAdmin);
     });
 
-    // Auto-signin anonyme (requis pour auth)
     auth.signInAnonymously().catch(console.error);
   </script>
 </body>
