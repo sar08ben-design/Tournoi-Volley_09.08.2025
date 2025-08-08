@@ -139,6 +139,8 @@
       <button id="removeButton" style="display:none" onclick="removeSelf()">Retirer mon nom</button>
     </div>
 
+       <!-- ... tout le code avant reste inchangé ... -->
+
     <div class="teams">
       <div class="team" id="teamA">
         <h3><input type="text" class="team-name" value="Équipe A" onchange="saveTeamName('teamA', this.value)" /></h3>
@@ -152,7 +154,6 @@
           <li>Thomas Taeyoon Park</li>
         </ol>
       </div>
-
       <div class="team" id="teamB">
         <h3><input type="text" class="team-name" value="Équipe B" onchange="saveTeamName('teamB', this.value)" /></h3>
         <ol class="player-list" id="teamBList">
@@ -165,7 +166,6 @@
           <li>Melhem Rachid Kasouha</li>
         </ol>
       </div>
-
       <div class="team" id="teamC">
         <h3><input type="text" class="team-name" value="Équipe C" onchange="saveTeamName('teamC', this.value)" /></h3>
         <ol class="player-list" id="teamCList">
@@ -178,7 +178,6 @@
           <li>Minola</li>
         </ol>
       </div>
-
       <div class="team" id="teamD">
         <h3><input type="text" class="team-name" value="Équipe D" onchange="saveTeamName('teamD', this.value)" /></h3>
         <ol class="player-list" id="teamDList">
@@ -193,97 +192,50 @@
       </div>
     </div>
 
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyDqdd88clB7eZV9qYMWmOjM961HEFZcB2k",
-        authDomain: "volley-tournoi.firebaseapp.com",
-        projectId: "volley-tournoi",
-        storageBucket: "volley-tournoi.firebasestorage.app",
-        messagingSenderId: "725989442836",
-        appId: "1:725989442836:web:5d59fbc16608be0fa52e01"
-      };
+    <!-- NOUVELLE SECTION HORAIRE -->
+    <div class="schedule" style="max-width: 700px; margin: 40px auto; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+      <h2 style="text-align: center; color: #00796b;">🏐 Horaire du Tournoi</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+          <tr style="background-color: #e0f2f1; color: #004d40;">
+            <th style="padding: 10px; border-bottom: 1px solid #ccc;">Heure</th>
+            <th style="padding: 10px; border-bottom: 1px solid #ccc;">Match</th>
+            <th style="padding: 10px; border-bottom: 1px solid #ccc;">Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 10px;">9h00</td>
+            <td>Équipe A vs Équipe B</td>
+            <td>Demi-finale 1</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px;">10h00</td>
+            <td>Équipe C vs Équipe D</td>
+            <td>Demi-finale 2</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px;">11h00</td>
+            <td>Perdants des demi-finales</td>
+            <td>Match pour la 3<sup>e</sup> place</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px;">12h00</td>
+            <td>Gagnants des demi-finales</td>
+            <td>Finale</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px;">13h00</td>
+            <td>Perdant Demi 1 vs Gagnant Demi 2</td>
+            <td>Match croisé 1</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px;">14h00</td>
+            <td>Gagnant Demi 1 vs Perdant Demi 2</td>
+            <td>Match croisé 2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const maxPlayers = 28;
-      const playerList = document.getElementById("playerList");
-      const nameInput = document.getElementById("nameInput");
-      const countSpan = document.getElementById("count");
-      const removeButton = document.getElementById("removeButton");
-
-      function updateCounterColor(count) {
-        if (count < 12) countSpan.style.color = "#d32f2f";
-        else if (count < 24) countSpan.style.color = "#f57c00";
-        else countSpan.style.color = "#388e3c";
-      }
-
-      async function loadPlayers() {
-        const playersSnapshot = await db.collection("players").get();
-        const players = playersSnapshot.docs.map(doc => doc.data().name);
-        playerList.innerHTML = "";
-        const currentName = localStorage.getItem("currentPlayer") || null;
-        removeButton.style.display = currentName ? "block" : "none";
-        players.forEach(player => {
-          const li = document.createElement("li");
-          li.className = "player-item";
-          li.textContent = player;
-          playerList.appendChild(li);
-        });
-        countSpan.textContent = players.length;
-        updateCounterColor(players.length);
-      }
-
-      async function addOrEditPlayer() {
-        const name = nameInput.value.trim();
-        if (!name) return;
-        const currentName = localStorage.getItem("currentPlayer") || null;
-        const playersSnapshot = await db.collection("players").get();
-        const players = playersSnapshot.docs.map(doc => doc.data().name);
-
-        if (currentName) {
-          if (name !== currentName && players.includes(name)) {
-            alert("Ce nom est déjà utilisé.");
-            return;
-          }
-          const playerDoc = playersSnapshot.docs.find(doc => doc.data().name === currentName);
-          if (playerDoc) {
-            await db.collection("players").doc(playerDoc.id).update({ name });
-            localStorage.setItem("currentPlayer", name);
-          }
-        } else {
-          if (players.includes(name)) {
-            alert("Ce nom est déjà utilisé.");
-            return;
-          }
-          if (players.length >= maxPlayers) {
-            alert("La liste est complète !");
-            return;
-          }
-          await db.collection("players").add({ name });
-          localStorage.setItem("currentPlayer", name);
-        }
-
-        nameInput.value = "";
-        loadPlayers();
-      }
-
-      async function removeSelf() {
-        const currentName = localStorage.getItem("currentPlayer") || null;
-        if (!currentName) return;
-        const playersSnapshot = await db.collection("players").get();
-        const playerDoc = playersSnapshot.docs.find(doc => doc.data().name === currentName);
-        if (playerDoc) {
-          await db.collection("players").doc(playerDoc.id).delete();
-          localStorage.removeItem("currentPlayer");
-        }
-        loadPlayers();
-      }
-
-      async function saveTeamName(teamId, newName) {
-        await db.collection("teams").doc(teamId).set({ name: newName }, { merge: true });
-      }
-
-      window.onload = loadPlayers;
-    </script>
-  </body>
-</html>
+    <!-- ... suite du code reste inchangée ... -->
