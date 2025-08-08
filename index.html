@@ -1,241 +1,396 @@
-<!DOCTYPE html>
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Inscription Tournoi Volley</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
+          <!DOCTYPE html>
+          <html lang="fr">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <title>Inscription Tournoi Volley</title>
+              <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+              <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+            <style>
+  * {
+    box-sizing: border-box;
+  }
 
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(to right, #e0f7fa, #ffffff);
-        margin: 0;
-        padding: 30px 15px;
-        color: #333;
-      }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #e0f7fa, #ffffff);
+    margin: 0;
+    padding: 30px 15px;
+    color: #333;
+    line-height: 1.6;
+  }
 
-      h1 {
-        text-align: center;
-        font-size: 2.5em;
-        margin-bottom: 0.2em;
-        color: #00796b;
-      }
+  h1 {
+    text-align: center;
+    font-size: 2.8em;
+    margin-bottom: 0.3em;
+    color: #00796b;
+  }
 
-      .counter {
-        text-align: center;
-        font-size: 1.2em;
-        margin-bottom: 20px;
-        color: #00695c;
-      }
+  .counter {
+    text-align: center;
+    font-size: 1.3em;
+    margin-bottom: 25px;
+    color: #004d40;
+  }
 
-      .players-list {
-        max-width: 600px;
-        margin: 20px auto;
-        background: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
+  .players-list {
+    max-width: 600px;
+    margin: 0 auto 40px;
+    background: #ffffff;
+    padding: 25px 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+  }
 
-      ol {
-        padding-left: 20px;
-        margin: 0 0 10px 0;
-      }
+  .toggle-button {
+    margin-bottom: 15px;
+    background-color: #00796b;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 1em;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
 
-      input[type="text"] {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 1em;
-      }
+  .toggle-button:hover {
+    background-color: #004d40;
+  }
 
-      button {
-        margin-top: 10px;
-        padding: 10px;
-        width: 100%;
-        background-color: #26a69a;
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 8px;
-        font-size: 1em;
-        transition: background 0.3s;
-      }
+  .hidden {
+    display: none;
+  }
 
-      button:hover {
-        background-color: #2bbbad;
-      }
+  ol {
+    padding-left: 20px;
+    margin: 0 0 15px 0;
+    transition: opacity 0.3s ease;
+  }
 
-      #removeButton {
-        background-color: #ef5350;
-      }
+  ol li {
+    padding: 4px 0;
+    border-bottom: 1px dotted #ccc;
+  }
 
-      #removeButton:hover {
-        background-color: #d32f2f;
-      }
+  input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 1em;
+  }
 
-      .teams {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        max-width: 1100px;
-        margin: 40px auto;
-      }
+  button {
+    margin-top: 12px;
+    padding: 12px;
+    width: 100%;
+    background-color: #26a69a;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+  }
 
-      .team {
-        background: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
+  button:hover {
+    background-color: #2bbbad;
+  }
 
-      .team h3 {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 1.2em;
-        margin-bottom: 10px;
-      }
+  #removeButton {
+    background-color: #ef5350;
+  }
 
-      .team input.team-name {
-        font-weight: bold;
-        font-size: 1em;
-        border: none;
-        background: transparent;
-        color: #00796b;
-        border-bottom: 1px dashed #bbb;
-      }
+  #removeButton:hover {
+    background-color: #d32f2f;
+  }
 
-      .team input.team-name:focus {
-        outline: none;
-        border-bottom: 1px solid #00796b;
-      }
+  .teams {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    max-width: 1100px;
+    margin: 40px auto;
+  }
 
-      .player-item {
-        margin-bottom: 4px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Inscris-toi!</h1>
-    <div class="counter">
-      <strong>Joueurs inscrits :</strong> <span id="count">0</span>/28
-    </div>
+  .team {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+  }
 
-    <div class="players-list">
-      <ol id="playerList"></ol>
-      <input type="text" id="nameInput" placeholder="Ton nom" />
-      <button onclick="addOrEditPlayer()">S'inscrire</button>
-      <button id="removeButton" style="display:none" onclick="removeSelf()">Retirer mon nom</button>
-    </div>
+  .team h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.3em;
+    margin-bottom: 12px;
+  }
 
-       <!-- ... tout le code avant reste inchangé ... -->
+  .team input.team-name {
+    font-weight: bold;
+    font-size: 1em;
+    border: none;
+    background: transparent;
+    color: #00796b;
+    border-bottom: 1px dashed #bbb;
+  }
 
-    <div class="teams">
-      <div class="team" id="teamA">
-        <h3><input type="text" class="team-name" value="Équipe A" onchange="saveTeamName('teamA', this.value)" /></h3>
-        <ol class="player-list" id="teamAList">
-          <li>Matteo</li>
-          <li>Arshpreet Singh Farmaha</li>
-          <li>Yousef Alshammas</li>
-          <li>Sarra B</li>
-          <li>Nasrine H</li>
-          <li>Didier Chan</li>
-          <li>Thomas Taeyoon Park</li>
-        </ol>
-      </div>
-      <div class="team" id="teamB">
-        <h3><input type="text" class="team-name" value="Équipe B" onchange="saveTeamName('teamB', this.value)" /></h3>
-        <ol class="player-list" id="teamBList">
-          <li>Mouhib</li>
-          <li>Arda</li>
-          <li>Jennifer</li>
-          <li>Manjot</li>
-          <li>Madelaine</li>
-          <li>Michelle Le</li>
-          <li>Melhem Rachid Kasouha</li>
-        </ol>
-      </div>
-      <div class="team" id="teamC">
-        <h3><input type="text" class="team-name" value="Équipe C" onchange="saveTeamName('teamC', this.value)" /></h3>
-        <ol class="player-list" id="teamCList">
-          <li>Bernardo</li>
-          <li>Hayon</li>
-          <li>Giakes</li>
-          <li>Patrick</li>
-          <li>Anabelle Chan</li>
-          <li>Thomas Chan-Seun-Koon</li>
-          <li>Minola</li>
-        </ol>
-      </div>
-      <div class="team" id="teamD">
-        <h3><input type="text" class="team-name" value="Équipe D" onchange="saveTeamName('teamD', this.value)" /></h3>
-        <ol class="player-list" id="teamDList">
-          <li>Amiel</li>
-          <li>Koi</li>
-          <li>Ali Farhan</li>
-          <li>Melina N</li>
-          <li>Daniela IR</li>
-          <li>Kevin</li>
-          <li>Sarah</li>
-        </ol>
-      </div>
-    </div>
+  .team input.team-name:focus {
+    outline: none;
+    border-bottom: 1px solid #00796b;
+  }
 
-    <!-- NOUVELLE SECTION HORAIRE -->
-    <div class="schedule" style="max-width: 700px; margin: 40px auto; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-      <h2 style="text-align: center; color: #00796b;">🏐 Horaire du Tournoi</h2>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <thead>
-          <tr style="background-color: #e0f2f1; color: #004d40;">
-            <th style="padding: 10px; border-bottom: 1px solid #ccc;">Heure</th>
-            <th style="padding: 10px; border-bottom: 1px solid #ccc;">Match</th>
-            <th style="padding: 10px; border-bottom: 1px solid #ccc;">Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding: 10px;">9h00</td>
-            <td>Équipe A vs Équipe B</td>
-            <td>Demi-finale 1</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px;">10h00</td>
-            <td>Équipe C vs Équipe D</td>
-            <td>Demi-finale 2</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px;">11h00</td>
-            <td>Perdants des demi-finales</td>
-            <td>Match pour la 3<sup>e</sup> place</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px;">12h00</td>
-            <td>Gagnants des demi-finales</td>
-            <td>Finale</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px;">13h00</td>
-            <td>Perdant Demi 1 vs Gagnant Demi 2</td>
-            <td>Match croisé 1</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px;">14h00</td>
-            <td>Gagnant Demi 1 vs Perdant Demi 2</td>
-            <td>Match croisé 2</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  .player-item {
+    margin-bottom: 6px;
+  }
 
-    <!-- ... suite du code reste inchangée ... -->
+  .schedule, .info {
+    max-width: 700px;
+    margin: 40px auto;
+    background: #ffffff;
+    padding: 25px 20px;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .schedule h2, .info h2 {
+    color: #00796b;
+    margin-bottom: 15px;
+  }
+
+  .schedule table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .schedule th, .schedule td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.95em;
+  }
+
+  .schedule th {
+    background-color: #e0f2f1;
+  }
+
+  .info p, .info ul {
+    font-size: 0.95em;
+  }
+
+  .info ul {
+    padding-left: 20px;
+  }
+
+  .info li {
+    margin-bottom: 10px;
+  }
+</style>
+
+            </head>
+            <body>
+              <h1>Inscris-toi!</h1>
+              <div class="counter">
+                <strong>Joueurs inscrits :</strong> <span id="count">0</span>/28
+              </div>
+
+              <div class="players-list">
+                <button class="toggle-button" onclick="togglePlayers()">Afficher/Masquer la liste des joueurs</button>
+                <ol id="playerList" class="hidden"></ol>
+                <input type="text" id="nameInput" placeholder="Ton nom" />
+                <button onclick="addOrEditPlayer()">S'inscrire</button>
+                <button id="removeButton" style="display:none" onclick="removeSelf()">Retirer mon nom</button>
+              </div>
+
+              <div class="schedule">
+                <h2>Horaire du Tournoi 🏐</h2>
+                <table>
+                  <tr><th>Heure</th><th>Match</th></tr>
+                  <tr><td>9h</td><td>Demi-finale 1 - Équipe A vs Équipe B</td></tr>
+                  <tr><td>10h</td><td>Demi-finale 2 - Équipe C vs Équipe D</td></tr>
+                  <tr><td>11h</td><td>Match 3e place - Perdants des demi-finales</td></tr>
+                  <tr><td>12h</td><td>Finale - Gagnants des demi-finales</td></tr>
+                  <tr><td>13h</td><td>Match croisé - Perdant match 1 vs Gagnant 2</td></tr>
+                  <tr><td>14h</td><td>Match croisé - Gagnant match 1 vs Perdant 2</td></tr>
+                </table>
+              </div>
+
+              <div class="info">
+                <h2>Infos Supplémentaires</h2>
+                <p><strong>Règlement de base :</strong> Tournoi mixte (2 filles minimum sur le terrain en tout temps, interdiction de bloquer les filles, filet à 2,35 m de hauteur).</p>
+                <p><strong>Coût :</strong> 9,11 $ par personne. Préférablement par virement Interac au <strong>(514) 573-0502</strong> avant samedi matin, sinon en comptant le jour même.</p>
+                <p><strong>Équipes :</strong> Les équipes envoyées par message peuvent être ajustées prochainement. Veuillez consulter ce site web pour la version officielle.</p>
+                <h3>Déroulement</h3>
+                <ul>
+                  <li>Une table à l’entrée affichera les équipes officielles, l’horaire et les règlements spécifiques au tournoi.</li>
+                  <li>Arrivez <strong>au moins 30 minutes avant votre premier match</strong> pour rencontrer vos coéquipiers, établir les positions, élire un capitaine, prendre connaissance des règlements particuliers et avoir le temps de vous échauffer.</li>
+                  <li>Pour toute question ou urgence, contactez le <strong>(514) 573-0502</strong>.</li>
+                </ul>
+              </div>
+
+              <div class="teams">
+                <div class="team">
+                  <h3><input class="team-name" value="Équipe A" disabled></h3>
+                  <div class="player-item">Matteo</div>
+                  <div class="player-item">Arshpreet Singh Farmaha</div>
+                  <div class="player-item">Yousef Alshammas</div>
+                  <div class="player-item">Sarra B</div>
+                  <div class="player-item">Nasrine H</div>
+                  <div class="player-item">Didier Chan</div>
+                  <div class="player-item">Thomas Taeyoon Park</div>
+                </div>
+                <div class="team">
+                  <h3><input class="team-name" value="Équipe B" disabled></h3>
+                  <div class="player-item">Manjot</div>
+                  <div class="player-item">Amiel</div>
+                  <div class="player-item">Bernardo</div>
+                  <div class="player-item">Jennifer</div>
+                  <div class="player-item">Madelaine</div>
+                  <div class="player-item">Michelle Le</div>
+                  <div class="player-item">Melhem Rachid Kasouha</div>
+                </div>
+                <div class="team">
+                  <h3><input class="team-name" value="Équipe C" disabled></h3>
+                  <div class="player-item">Mouhib</div>
+                  <div class="player-item">Arda	</div>
+                  <div class="player-item">Koi	</div>
+                  <div class="player-item">Giakes</div>
+                  <div class="player-item">Hayon</div>
+                  <div class="player-item">Anabelle Chan</div>
+                  <div class="player-item">Minola</div>
+                </div>
+                <div class="team">
+                  <h3><input class="team-name" value="Équipe D" disabled></h3>
+                  <div class="player-item">	Thomas Chan-Seun-Koon </div>
+                  <div class="player-item">Patrick </div>
+                  <div class="player-item">Ali Farhan</div>
+                  <div class="player-item">Melina N</div>
+                  <div class="player-item">Daniela IR</div>
+                  <div class="player-item">Kevin</div>
+                  <div class="player-item">Sarah</div>
+                </div>
+              </div>
+
+            <script>
+            // Initialisation de Firebase
+            const firebaseConfig = {
+              apiKey: "AIzaSyDqdd88clB7eZV9qYMWmOjM961HEFZcB2k",
+              authDomain: "volley-tournoi.firebaseapp.com",
+              projectId: "volley-tournoi",
+              storageBucket: "volley-tournoi.firebasestorage.app",
+              messagingSenderId: "725989442836",
+              appId: "1:725989442836:web:5d59fbc16608be0fa52e01"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+
+            const maxPlayers = 28;
+            const playerList = document.getElementById("playerList");
+            const nameInput = document.getElementById("nameInput");
+            const countSpan = document.getElementById("count");
+            const removeButton = document.getElementById("removeButton");
+
+            function updateCounterColor(count) {
+              if (count < 12) countSpan.style.color = "#d32f2f";
+              else if (count < 24) countSpan.style.color = "#f57c00";
+              else countSpan.style.color = "#388e3c";
+            }
+
+            async function loadPlayers() {
+              try {
+                const playersSnapshot = await db.collection("players").get();
+                const players = [];
+                playerList.innerHTML = "";
+                playersSnapshot.forEach(doc => {
+                  const playerName = doc.data().name;
+                  if (playerName) {
+                    players.push(playerName);
+                  }
+                });
+                players.forEach(name => {
+                  const li = document.createElement("li");
+                  li.className = "player-item";
+                  li.textContent = name;
+                  playerList.appendChild(li);
+                });
+                countSpan.textContent = players.length;
+                updateCounterColor(players.length);
+
+                const currentName = localStorage.getItem("currentPlayer");
+                removeButton.style.display = currentName ? "block" : "none";
+              } catch (error) {
+                console.error("Erreur de chargement des joueurs:", error);
+              }
+            }
+
+            async function addOrEditPlayer() {
+              const name = nameInput.value.trim();
+              if (!name) return;
+              const currentName = localStorage.getItem("currentPlayer") || null;
+
+              try {
+                const playersSnapshot = await db.collection("players").get();
+                const players = playersSnapshot.docs.map(doc => doc.data().name);
+
+                if (currentName) {
+                  if (name !== currentName && players.includes(name)) {
+                    alert("Ce nom est déjà utilisé.");
+                    return;
+                  }
+                  const playerDoc = playersSnapshot.docs.find(doc => doc.data().name === currentName);
+                  if (playerDoc) {
+                    await db.collection("players").doc(playerDoc.id).update({ name });
+                    localStorage.setItem("currentPlayer", name);
+                  }
+                } else {
+                  if (players.includes(name)) {
+                    alert("Ce nom est déjà utilisé.");
+                    return;
+                  }
+                  if (players.length >= maxPlayers) {
+                    alert("La liste est complète !");
+                    return;
+                  }
+                  await db.collection("players").add({ name });
+                  localStorage.setItem("currentPlayer", name);
+                }
+
+                nameInput.value = "";
+                loadPlayers();
+              } catch (error) {
+                console.error("Erreur lors de l'ajout/modification:", error);
+              }
+            }
+
+            async function removeSelf() {
+              const currentName = localStorage.getItem("currentPlayer") || null;
+              if (!currentName) return;
+              try {
+                const playersSnapshot = await db.collection("players").get();
+                const playerDoc = playersSnapshot.docs.find(doc => doc.data().name === currentName);
+                if (playerDoc) {
+                  await db.collection("players").doc(playerDoc.id).delete();
+                  localStorage.removeItem("currentPlayer");
+                }
+                loadPlayers();
+              } catch (error) {
+                console.error("Erreur lors de la suppression:", error);
+              }
+            }
+
+            function togglePlayers() {
+              playerList.classList.toggle("hidden");
+            }
+
+            window.onload = loadPlayers;
+          </script>
+
+            </body>
+          </html>
